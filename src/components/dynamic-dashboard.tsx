@@ -1,8 +1,7 @@
 import { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import { Calendar, Filter, Moon, Sun, TrendingUp, Users, DollarSign, ShoppingCart, RefreshCw } from 'lucide-react';
+import { Calendar, Filter, Moon, Sun, TrendingUp, Users, DollarSign, ShoppingCart } from 'lucide-react';
 
-// Mock data generator
 const generateMockData = () => {
   const categories = ['Electronics', 'Clothing', 'Books', 'Home & Garden', 'Sports', 'Beauty'];
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -38,32 +37,19 @@ const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#ff00ff'
 
 export default function DynamicDashboard() {
   const [darkMode, setDarkMode] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [dateRange, setDateRange] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [chartType, setChartType] = useState('line');
-  const [data, setData] = useState(() => generateMockData());
+  const [data] = useState(() => generateMockData());
 
-  // Simulate data fetching
-  const fetchData = async () => {
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setData(generateMockData());
-    setIsLoading(false);
-  };
-
-  // Filter data based on selections
   const filteredData = useMemo(() => {
     let filtered = data.salesData;
 
-    // Filter by date range
     if (dateRange !== 'all') {
-      const currentMonth = new Date().getMonth();
       const monthsToShow = parseInt(dateRange);
-      filtered = filtered.slice(Math.max(0, currentMonth - monthsToShow + 1));
+      filtered = data.salesData.slice(-monthsToShow);
     }
 
-    // Filter by category
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(item => item.category === selectedCategory);
     }
@@ -71,7 +57,6 @@ export default function DynamicDashboard() {
     return filtered;
   }, [data.salesData, dateRange, selectedCategory]);
 
-  // Calculate KPIs
   const kpis = useMemo(() => {
     const totalSales = filteredData.reduce((sum, item) => sum + item.sales, 0);
     const totalRevenue = filteredData.reduce((sum, item) => sum + item.revenue, 0);
@@ -100,6 +85,13 @@ export default function DynamicDashboard() {
       data: filteredData,
       margin: { top: 5, right: 30, left: 20, bottom: 5 }
     };
+    
+    const tooltipStyle = { 
+      backgroundColor: darkMode ? '#1f2937' : '#ffffff',
+      border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
+      borderRadius: '8px',
+      color: darkMode ? '#ffffff' : '#000000'
+    };
 
     switch (chartType) {
       case 'bar':
@@ -108,14 +100,7 @@ export default function DynamicDashboard() {
             <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#e5e7eb'} />
             <XAxis dataKey="month" stroke={darkMode ? '#9ca3af' : '#6b7280'} />
             <YAxis stroke={darkMode ? '#9ca3af' : '#6b7280'} />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: darkMode ? '#1f2937' : '#ffffff',
-                border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
-                borderRadius: '8px',
-                color: darkMode ? '#ffffff' : '#000000'
-              }}
-            />
+            <Tooltip contentStyle={tooltipStyle} />
             <Legend />
             <Bar dataKey="sales" fill="#8884d8" name="Sales" />
             <Bar dataKey="revenue" fill="#82ca9d" name="Revenue" />
@@ -133,14 +118,7 @@ export default function DynamicDashboard() {
             <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#e5e7eb'} />
             <XAxis dataKey="month" stroke={darkMode ? '#9ca3af' : '#6b7280'} />
             <YAxis stroke={darkMode ? '#9ca3af' : '#6b7280'} />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: darkMode ? '#1f2937' : '#ffffff',
-                border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
-                borderRadius: '8px',
-                color: darkMode ? '#ffffff' : '#000000'
-              }}
-            />
+            <Tooltip contentStyle={tooltipStyle} />
             <Area type="monotone" dataKey="sales" stroke="#8884d8" fillOpacity={1} fill="url(#colorSales)" />
           </AreaChart>
         );
@@ -150,14 +128,7 @@ export default function DynamicDashboard() {
             <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#e5e7eb'} />
             <XAxis dataKey="month" stroke={darkMode ? '#9ca3af' : '#6b7280'} />
             <YAxis stroke={darkMode ? '#9ca3af' : '#6b7280'} />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: darkMode ? '#1f2937' : '#ffffff',
-                border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
-                borderRadius: '8px',
-                color: darkMode ? '#ffffff' : '#000000'
-              }}
-            />
+            <Tooltip contentStyle={tooltipStyle} />
             <Legend />
             <Line type="monotone" dataKey="sales" stroke="#8884d8" strokeWidth={3} dot={{ r: 6 }} />
             <Line type="monotone" dataKey="revenue" stroke="#82ca9d" strokeWidth={3} dot={{ r: 6 }} />
@@ -169,7 +140,6 @@ export default function DynamicDashboard() {
   return (
     <div className={`min-h-screen ${theme.bg} transition-colors duration-300`}>
       <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
         <div className={`${theme.cardBg} rounded-lg shadow-lg p-6 mb-6 border ${theme.border}`}>
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
@@ -178,28 +148,15 @@ export default function DynamicDashboard() {
             </div>
             
             <div className="flex flex-wrap items-center gap-3">
-              {/* Refresh Button */}
-              <button
-                onClick={fetchData}
-                disabled={isLoading}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${theme.border} ${theme.hover} ${theme.text} transition-colors disabled:opacity-50`}
-              >
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                Refresh
-              </button>
-
-              {/* Theme Toggle */}
               <button
                 onClick={() => setDarkMode(!darkMode)}
-                className={`p-2 rounded-lg border ${theme.border} ${theme.hover} ${theme.text} transition-colors`}
+                className={`p-2 rounded-lg border ${theme.border} ${theme.hover} ${theme.text} transition-colors cursor-pointer`}
               >
                 {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
             </div>
           </div>
         </div>
-
-        {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           {[
             { title: 'Total Sales', value: kpis.sales.value, growth: kpis.sales.growth, icon: DollarSign, color: 'text-green-500' },
@@ -221,48 +178,39 @@ export default function DynamicDashboard() {
             </div>
           ))}
         </div>
-
-        {/* Filters and Controls */}
         <div className={`${theme.cardBg} rounded-lg shadow-lg p-6 mb-6 border ${theme.border}`}>
           <div className="flex flex-col lg:flex-row lg:items-center gap-4">
             <div className="flex items-center gap-2">
               <Filter className={`w-5 h-5 ${theme.text}`} />
               <span className={`${theme.text} font-medium`}>Filters:</span>
             </div>
-            
             <div className="flex flex-wrap gap-4">
-              {/* Date Range Filter */}
               <div className="flex items-center gap-2">
                 <Calendar className={`w-4 h-4 ${theme.textSecondary}`} />
                 <select
                   value={dateRange}
                   onChange={(e) => setDateRange(e.target.value)}
-                  className={`px-3 py-2 rounded-lg border ${theme.border} ${theme.cardBg} ${theme.text} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  className={`px-3 py-2 rounded-lg border ${theme.border} ${theme.cardBg} ${theme.text} focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer`}
                 >
                   <option value="all">All Time</option>
                   <option value="3">Last 3 Months</option>
                   <option value="6">Last 6 Months</option>
-                  <option value="12">Last Year</option>
                 </select>
               </div>
-
-              {/* Category Filter */}
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className={`px-3 py-2 rounded-lg border ${theme.border} ${theme.cardBg} ${theme.text} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                className={`px-3 py-2 rounded-lg border ${theme.border} ${theme.cardBg} ${theme.text} focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer`}
               >
                 <option value="all">All Categories</option>
                 {['Electronics', 'Clothing', 'Books', 'Home & Garden', 'Sports', 'Beauty'].map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
-
-              {/* Chart Type */}
               <select
                 value={chartType}
                 onChange={(e) => setChartType(e.target.value)}
-                className={`px-3 py-2 rounded-lg border ${theme.border} ${theme.cardBg} ${theme.text} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                className={`px-3 py-2 rounded-lg border ${theme.border} ${theme.cardBg} ${theme.text} focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer`}
               >
                 <option value="line">Line Chart</option>
                 <option value="bar">Bar Chart</option>
@@ -271,21 +219,15 @@ export default function DynamicDashboard() {
             </div>
           </div>
         </div>
-
-        {/* Main Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Primary Chart */}
           <div className={`lg:col-span-2 ${theme.cardBg} rounded-lg shadow-lg p-6 border ${theme.border}`}>
             <h3 className={`${theme.text} text-xl font-semibold mb-4`}>
               Sales & Revenue Trends
-              {isLoading && <span className={`${theme.textSecondary} text-sm ml-2`}>(Loading...)</span>}
             </h3>
             <ResponsiveContainer width="100%" height={400}>
               {renderChart()}
             </ResponsiveContainer>
           </div>
-
-          {/* Category Breakdown */}
           <div className={`${theme.cardBg} rounded-lg shadow-lg p-4 border ${theme.border}`}>
             <h3 className={`${theme.text} text-xl font-semibold mb-4 text-center`}>Category Breakdown</h3>
             <ResponsiveContainer width="100%" height={350}>
@@ -321,8 +263,6 @@ export default function DynamicDashboard() {
             </ResponsiveContainer>
           </div>
         </div>
-
-        {/* Daily Analytics */}
         <div className={`${theme.cardBg} rounded-lg shadow-lg p-6 border ${theme.border}`}>
           <h3 className={`${theme.text} text-xl font-semibold mb-4`}>Daily Website Analytics (Last 30 Days)</h3>
           <ResponsiveContainer width="100%" height={300}>
